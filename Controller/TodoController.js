@@ -32,15 +32,20 @@ module.exports.getTodo = async (req, res) => {
 
 module.exports.saveTodo = async (req, res) => {
   const { text } = req.body;
-  let todo = await redisClient.get("todos");
-  todo = JSON.parse(todo);
-  TodoModel.create({ text }).then((data) => {
-    console.log("Added Successfully");
-    console.log(data);
-    todo.push(data);
-    redisClient.set("todos", JSON.stringify(todo));
-    res.send(data);
-  });
+  let todoExist = await TodoModel.exists({ text: text });
+  if (todoExist) {
+    res.send("Todo item already exists");
+  } else {
+    let todo = await redisClient.get("todos");
+    todo = JSON.parse(todo);
+    TodoModel.create({ text }).then((data) => {
+      console.log("Added Successfully");
+      console.log(data);
+      todo.push(data);
+      redisClient.set("todos", JSON.stringify(todo));
+      res.send(data);
+    });
+  }
 };
 
 module.exports.updateTodo = async (req, res) => {
